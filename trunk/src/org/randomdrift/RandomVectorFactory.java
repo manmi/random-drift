@@ -6,10 +6,12 @@ public class RandomVectorFactory {
 
 	final float density;
 	final int dimension;
+	Random random;
 
 	public RandomVectorFactory(int dimension, float density) {
 		this.dimension = dimension;
 		this.density = density;
+		this.random = new Random();
 	}
 
 	public RandomVector getZeroVector() {
@@ -42,7 +44,7 @@ public class RandomVectorFactory {
 	}
 
 	public float[] shuffleArray(float[] array) {
-		Random random = new Random();
+		//Random random = new Random();
 		for (int i = array.length - 1; i >= 0; i--) {
 			int index = random.nextInt(i + 1);
 			// Simple swap
