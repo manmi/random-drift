@@ -102,4 +102,39 @@ public class RandomVector {
 		}
 		return dotProduct;
 	}
+	
+	public void scaleVector(float scaleFactor){	
+		for(int i = 0; i < dimension; i++){
+			randomArray[i] = randomArray[i] * scaleFactor;
+		}
+	}
+	
+	public void add(RandomVector randomVector){
+		
+		for(int i = 0; i < dimension; i++){
+			randomArray[i] += randomVector.randomArray[i];
+		}
+	}
+	
+	public void normalize(){
+		float sumOfComponents = 0.0f;
+		for(int i = 0; i < dimension; i++){
+			sumOfComponents += (randomArray[i]*randomArray[i]);
+		}
+		float sqrtSumOfComponents = (float) Math.sqrt(sumOfComponents);
+		for(int i = 0; i < dimension; i++){
+			randomArray[i] = randomArray[i]/sqrtSumOfComponents;
+		}
+	}
+	
+	public RandomVector getHaar1D(){
+		RandomVector haarVector = new RandomVector(this.dimension/2); //Assumed dimension is always even number
+		float[] haarArray = new float[this.dimension/2];
+		for(int i = 0, j = 0; i < dimension; i+= 2, j++){
+			haarArray[j] = (randomArray[i] + randomArray[i+1])/2;
+		}
+		haarVector.setRandomArray(haarArray);
+		haarVector.normalize();
+		return haarVector;
+	}
 }
