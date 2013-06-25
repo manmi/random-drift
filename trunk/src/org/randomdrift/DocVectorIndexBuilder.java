@@ -38,7 +38,7 @@ public class DocVectorIndexBuilder {
 		this.documentHaarVectors2 = new HashMap<>();
 		this.luceneIndexReader = IndexReader.open(FSDirectory.open(new File(
 				this.luceneIndexPath)));
-		vectorFactory = new RandomVectorFactory(100, 0.2f);
+		vectorFactory = new RandomVectorFactory(64, 0.2f);
 		this.termVectors = termVectors;
 		this.docIDPathMap = docIDPathMap;
 	}
