@@ -54,4 +54,16 @@ public class RandomVectorFactory {
 		}
 		return array;
 	}
+	
+	public RandomVector getCopy(RandomVector copyOf){
+		RandomVector copy = new RandomVector(dimension);
+		float[] randomArrayCopy = new float[dimension];
+		float[] randomArrayCopyOf = copyOf.getRandomArray();
+		assert(this.dimension == randomArrayCopy.length);
+		for(int i = 0; i < randomArrayCopyOf.length; i++){
+			randomArrayCopy[i] = randomArrayCopyOf[i];
+		}
+		copy.setRandomArray(randomArrayCopy);
+		return copy;
+	}
 }
