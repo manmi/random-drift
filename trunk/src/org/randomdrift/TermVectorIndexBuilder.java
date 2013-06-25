@@ -17,7 +17,13 @@ import org.apache.lucene.store.FSDirectory;
 public class TermVectorIndexBuilder {
 
 	// private HashMap<Term, RandomVector> termVectors;
-	private HashMap<String, RandomVector> termVectors;
+	private HashMap<String, RandomVector> termVectors0;
+	private HashMap<String, RandomVector> termVectors1;
+	private HashMap<String, RandomVector> termVectors2;
+	private HashMap<String, RandomVector> termVectors3;
+	private HashMap<String, RandomVector> termVectors4;
+	private HashMap<String, RandomVector> termVectors5;
+	private HashMap<String, RandomVector> termVectors6;
 	private HashMap<String, RandomVector> contextVectors;
 	private IndexReader luceneIndexReader;
 	private final String luceneIndexPath;
@@ -33,7 +39,13 @@ public class TermVectorIndexBuilder {
 			Map<Integer, String> docIDPathMap) throws CorruptIndexException,
 			IOException {
 		this.luceneIndexPath = luceneIndexPath;
-		this.termVectors = new HashMap<>();
+		this.termVectors0 = new HashMap<>();
+		this.termVectors1 = new HashMap<>();
+		this.termVectors2 = new HashMap<>();
+		this.termVectors3 = new HashMap<>();
+		this.termVectors4 = new HashMap<>();
+		this.termVectors5 = new HashMap<>();
+		this.termVectors6 = new HashMap<>();
 		this.contextVectors = new HashMap<>();
 		this.luceneIndexReader = IndexReader.open(FSDirectory.open(new File(
 				this.luceneIndexPath)));
@@ -42,12 +54,52 @@ public class TermVectorIndexBuilder {
 		this.docIDPathMap = docIDPathMap;
 		this.totalNumberOfTerms = totalNumberOfTerms;
 
-		vectorFactory = new RandomVectorFactory(100, 0.2f);
+		vectorFactory = new RandomVectorFactory(128, 0.2f);
+	}
+	
+	public void buildTermHaarVectors(){
+		Iterator<String> termIterator = termVectors0.keySet().iterator();
+		while(termIterator.hasNext()){
+			String term = termIterator.next();
+			RandomVector haarVector1 = (termVectors0.get(term)).getHaar1D();
+			RandomVector haarVector2 = haarVector1.getHaar1D();
+			RandomVector haarVector3 = haarVector2.getHaar1D();
+			RandomVector haarVector4 = haarVector3.getHaar1D();
+			RandomVector haarVector5 = haarVector4.getHaar1D();
+			RandomVector haarVector6 = haarVector5.getHaar1D();
+			termVectors1.put(term, haarVector1);
+			termVectors2.put(term, haarVector2);
+			termVectors3.put(term, haarVector3);
+			termVectors4.put(term, haarVector4);
+			termVectors5.put(term, haarVector5);
+			termVectors6.put(term, haarVector6);
+		}
 	}
 
 	public Map<String, RandomVector> getTermVectors() {
-		return termVectors;
+		return termVectors0;
 	}
+	
+	public Map<String, RandomVector> getTermVectors(int order){
+		switch (order) {
+		case 1:
+			return termVectors1;
+		case 2:
+			return termVectors2;
+		case 3:
+			return termVectors3;
+		case 4:
+			return termVectors4;
+		case 5:
+			return termVectors5;
+		case 6:
+			return termVectors6;
+		default:
+			return null;
+		}
+	}
+	
+
 
 	public void buildTermVectorsAll() throws CorruptIndexException, IOException {
 
@@ -93,15 +145,18 @@ public class TermVectorIndexBuilder {
 						.get(termDocs.doc())) / termDocs.freq());
 				String docPath = docIDPathMap.get(termDocs.doc());
 				RandomVector contextVector = contextVectors.get(docPath);
-				contextVector.scaleVector(scaleFactor1 + scaleFactor2);
-				contextVector.normalize();
-				if (termVectors.containsKey(termString)) {
-					RandomVector termVector = termVectors.get(termString);
-					termVector.add(contextVector);
+				RandomVector contextVectorCopy = vectorFactory.getCopy(contextVector);
+				
+				contextVectorCopy.scaleVector(scaleFactor1 + scaleFactor2);
+				contextVectorCopy.normalize();
+
+				if (termVectors0.containsKey(termString)) {
+					RandomVector termVector = termVectors0.get(termString);
+					termVector.add(contextVectorCopy);
 					termVector.normalize();
-					termVectors.put(termString, termVector);
+					termVectors0.put(termString, termVector);
 				} else {
-					termVectors.put(termString, contextVector);
+					termVectors0.put(termString, contextVectorCopy);
 				}
 			}
 		}
@@ -111,11 +166,11 @@ public class TermVectorIndexBuilder {
 		float[] similarity = new float[n];
 		String[] terms = new String[n];
 
-		RandomVector queryTerm = termVectors.get(term);
+		RandomVector queryTerm = termVectors0.get(term);
 
 		if (queryTerm != null) {
-			for (String targetTerm : termVectors.keySet()) {
-				float dotProduct = queryTerm.dotProduct(termVectors
+			for (String targetTerm : termVectors0.keySet()) {
+				float dotProduct = queryTerm.dotProduct(termVectors0
 						.get(targetTerm));
 
 				for (int i = 0; i < n; i++) {
