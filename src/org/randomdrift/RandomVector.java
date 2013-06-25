@@ -6,9 +6,7 @@ public class RandomVector {
 
 	private final int dimension;
 	private float[] randomArray;
-	private boolean isDocVector = false;
-	private String docPath = null;
-	private String term = null;
+	
 
 	public RandomVector(int dimension) {
 		this.dimension = dimension;
@@ -42,30 +40,7 @@ public class RandomVector {
 		return true;
 	}
 
-	public boolean isDocVector() {
-		return isDocVector;
-	}
-
-	public void setDocVector(boolean isDocVector) {
-		this.isDocVector = isDocVector;
-	}
-
-	public String getDocPath() {
-		return docPath;
-	}
-
-	public void setDocPath(String docPath) {
-		this.docPath = docPath;
-	}
-
-	public String getTerm() {
-		return term;
-	}
-
-	public void setTerm(String term) {
-		this.term = term;
-	}
-
+	
 	@Override
 	public String toString() {
 
@@ -127,14 +102,16 @@ public class RandomVector {
 		}
 	}
 	
+	//This should be in factory
 	public RandomVector getHaar1D(){
-		RandomVector haarVector = new RandomVector(this.dimension/2); //Assumed dimension is always even number
+		RandomVector haarVector = new RandomVector(this.dimension/2); //Assumed dimension is always even number 2^N
 		float[] haarArray = new float[this.dimension/2];
 		for(int i = 0, j = 0; i < dimension; i+= 2, j++){
 			haarArray[j] = (randomArray[i] + randomArray[i+1])/2;
 		}
 		haarVector.setRandomArray(haarArray);
-		haarVector.normalize();
+		//haarVector.normalize();
 		return haarVector;
 	}
+	
 }
