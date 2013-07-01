@@ -13,7 +13,7 @@ public class TestDocumentVectorIndexBuilder {
 	public static void main(String[] args) throws CorruptIndexException,
 			IOException {
 
-		String luceneIndexPath = "E:\\Corpora\\Toi2\\index";
+		String luceneIndexPath = "E:\\Corpora\\Toi4\\index";
 		// Build the term vectors
 
 		LuceneIndexProfiler indexProfiler = new LuceneIndexProfiler(
@@ -37,7 +37,7 @@ public class TestDocumentVectorIndexBuilder {
 				+ ((endTime - startTime) / 1000) + " seconds.");
 
 		DocVectorIndexBuilder docIndexBuilder = new DocVectorIndexBuilder(
-				luceneIndexPath, termIndexBuilder.getTermVectors(1),
+				luceneIndexPath, termIndexBuilder.getTermVectors(0),
 				indexProfiler.getDocIDPathMap());
 		docIndexBuilder.buildDoctVectorsAll();
 		endTime = System.currentTimeMillis();

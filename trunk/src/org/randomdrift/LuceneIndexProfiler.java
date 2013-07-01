@@ -38,7 +38,7 @@ public class LuceneIndexProfiler {
 
 		while (termEnum.next()) {
 			Term term = termEnum.term();
-			if (term.field().equals("contents") && term.text().length() > 3) {
+			if (term.field().equals("contents") && term.text().length() > 3 && stringIsAlpha(term.text())) {
 				TermDocs termDocs = luceneIndexReader.termDocs(term);
 				int intTermGlobalFreq = 0;
 				while (termDocs.next()) {
@@ -59,6 +59,15 @@ public class LuceneIndexProfiler {
 				setTotalNumberOfTerms(getTotalNumberOfTerms() + intTermGlobalFreq);
 			}
 		}
+	}
+	
+	public boolean stringIsAlpha(String term){
+		char[] chars = term.toCharArray();
+		for(char c:chars){
+			if(!Character.isAlphabetic(c))
+				return false;
+		}
+		return true;
 	}
 
 	public Map<Integer, Integer> getNumTermsInDoc() {

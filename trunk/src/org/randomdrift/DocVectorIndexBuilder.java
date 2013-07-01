@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
-
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -58,16 +56,16 @@ public class DocVectorIndexBuilder {
 				documentRandomVector.add(termRandomVector);
 				float scaleFactor = (float) (1 + Math.log10(1 + Math
 						.log10(termDocs.freq())));
-				
-//				float scaleFactor = (float)(1+Math.log10(termDocs.freq()));
+
+				// float scaleFactor = (float)(1+Math.log10(termDocs.freq()));
 				documentRandomVector.scaleVector(scaleFactor);
-				documentRandomVector.normalize();
+				//documentRandomVector.normalize();
 				int docID = termDocs.doc();
 				String docPath = docIDPathMap.get(docID);
 				if (documentVectors.containsKey(docPath)) {
 					RandomVector tmpRV = documentVectors.get(docPath);
 					tmpRV.add(documentRandomVector);
-					tmpRV.normalize();
+					//tmpRV.normalize();
 					documentVectors.put(docPath, tmpRV);
 				} else {
 
@@ -75,13 +73,25 @@ public class DocVectorIndexBuilder {
 				}
 			}
 		}
+		normalizeDocVectors();
 	}
 	
-	public void buildHaar1DIndex(){
+	public void normalizeDocVectors(){
+		Iterator<String> docVectorIterator = documentVectors.keySet().iterator();
+		while(docVectorIterator.hasNext()){
+			String docPath = docVectorIterator.next();
+			RandomVector rv = documentVectors.get(docPath);
+			rv.normalize();
+			documentVectors.put(docPath, rv);
+		}
+	}
+
+	public void buildHaar1DIndex() {
 		Iterator<String> docIterator = documentVectors.keySet().iterator();
-		while(docIterator.hasNext()){
+		while (docIterator.hasNext()) {
 			String docPath = docIterator.next();
-			RandomVector haarVector = (documentVectors.get(docPath)).getHaar1D();
+			RandomVector haarVector = (documentVectors.get(docPath))
+					.getHaar1D();
 			RandomVector haarVector2 = haarVector.getHaar1D();
 			documentHaarVectors.put(docPath, haarVector);
 			documentHaarVectors2.put(docPath, haarVector2);
@@ -97,8 +107,8 @@ public class DocVectorIndexBuilder {
 		}
 		return 0.0f;
 	}
-	
-	public float compareDocumentsInHaar(String docPath1, String docPath2){
+
+	public float compareDocumentsInHaar(String docPath1, String docPath2) {
 		if (documentHaarVectors.containsKey(docPath1)
 				&& documentHaarVectors.containsKey(docPath2)) {
 			RandomVector doc1RV = documentHaarVectors.get(docPath1);
@@ -107,8 +117,8 @@ public class DocVectorIndexBuilder {
 		}
 		return 0.0f;
 	}
-	
-	public float compareDocumentsInHaar2(String docPath1, String docPath2){
+
+	public float compareDocumentsInHaar2(String docPath1, String docPath2) {
 		if (documentHaarVectors2.containsKey(docPath1)
 				&& documentHaarVectors2.containsKey(docPath2)) {
 			RandomVector doc1RV = documentHaarVectors2.get(docPath1);
