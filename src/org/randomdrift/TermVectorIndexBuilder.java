@@ -32,6 +32,7 @@ public class TermVectorIndexBuilder {
 	private Map<String, Integer> termGlobalFreq;
 	private Map<Integer, String> docIDPathMap;
 	private int totalNumberOfTerms;
+	private int totalNumberOfDocs;
 
 	public TermVectorIndexBuilder(String luceneIndexPath, int totalNumberOfTerms,
 			Map<Integer, Integer> numTermsInDoc,
@@ -53,8 +54,9 @@ public class TermVectorIndexBuilder {
 		this.termGlobalFreq = termGlobalFreq;
 		this.docIDPathMap = docIDPathMap;
 		this.totalNumberOfTerms = totalNumberOfTerms;
+		this.totalNumberOfDocs = docIDPathMap.size();
 
-		vectorFactory = new RandomVectorFactory(128, 0.2f);
+		vectorFactory = new RandomVectorFactory(64, 0.2f);
 	}
 	
 	public void buildTermHaarVectors(){
@@ -82,6 +84,8 @@ public class TermVectorIndexBuilder {
 	
 	public Map<String, RandomVector> getTermVectors(int order){
 		switch (order) {
+		case 0:
+			return termVectors0;
 		case 1:
 			return termVectors1;
 		case 2:
@@ -110,57 +114,52 @@ public class TermVectorIndexBuilder {
 			contextVectors.put(docIDPathMap.get(docID), contextVector);
 		}
 
-		TermEnum termEnum = luceneIndexReader.terms();
-
-		// while (termEnum.next()) {
-		// Term term = termEnum.term();
-		// if (term.field() == "contents" && term.text().length() > 3) {
-		// // System.out.println("Term : Field: " + term.field() +
-		// // " Text: "
-		// // + term.text());
-		// TermDocs termDocs = luceneIndexReader.termDocs(term);
-		// while (termDocs.next()) {
-		// int docID = termDocs.doc();
-		// if (termVectors.containsKey(term)) {
-		// termVectors.put(term.text(), termVectors.get(term)
-		// .addOneVector(contextVectors.get(docID)));
-		// } else {
-		// termVectors.put(term.text(), contextVectors.get(docID));
-		// }
-		// }
-		// } else {
-		// continue;
-		// }
-		// }
-
 		Iterator<String> termIterator = termGlobalFreq.keySet().iterator();
 		while (termIterator.hasNext()) {
 			String termString = termIterator.next();
 			Term term = new Term("contents", termString);
 			TermDocs termDocs = luceneIndexReader.termDocs(term);
-			float scaleFactor1 = (float) Math.log10(totalNumberOfTerms
-					/ termGlobalFreq.get(termString));
+			int totalNumberOfTermsI = termGlobalFreq.get(termString);
+			int smalln = luceneIndexReader.docFreq(term);
+			float scaleFactor = (float)((Math.log(1+totalNumberOfDocs/smalln))/(Math.log(2)));//IDF
+			//float scaleFactor1 = (float) Math.log10(totalNumberOfTerms
+			//		/ termGlobalFreq.get(termString));
 			while (termDocs.next()) {
-				float scaleFactor2 = (float) Math.log10((numTermsInDoc
-						.get(termDocs.doc())) / termDocs.freq());
+				//float scaleFactor2 = (float) Math.log10((numTermsInDoc
+				//		.get(termDocs.doc())) / termDocs.freq());
+				//float scaleFactor = Math.log(totalNumberOfDocs/)
 				String docPath = docIDPathMap.get(termDocs.doc());
 				RandomVector contextVector = contextVectors.get(docPath);
 				RandomVector contextVectorCopy = vectorFactory.getCopy(contextVector);
 				
-				contextVectorCopy.scaleVector(scaleFactor1 + scaleFactor2);
-				contextVectorCopy.normalize();
+				contextVectorCopy.scaleVector(scaleFactor);//for IDF
+				//contextVectorCopy.scaleVector(scaleFactor1 + scaleFactor2);
+				//contextVectorCopy.normalize();
 
 				if (termVectors0.containsKey(termString)) {
 					RandomVector termVector = termVectors0.get(termString);
 					termVector.add(contextVectorCopy);
-					termVector.normalize();
+					//termVector.normalize();
 					termVectors0.put(termString, termVector);
 				} else {
 					termVectors0.put(termString, contextVectorCopy);
 				}
 			}
 		}
+		normalizeTermVectors0();
 	}
+	
+	public void normalizeTermVectors0(){	
+		Iterator<String> termVectorIterator = termVectors0.keySet().iterator();
+		while(termVectorIterator.hasNext()){
+			String term = termVectorIterator.next();
+			RandomVector rv = termVectors0.get(term);
+			rv.normalize();
+			termVectors0.put(term, rv);
+		}
+	}
+	
+	
 
 	public String[] getTopNSimilarTerms(String term, int n) {
 		float[] similarity = new float[n];
