@@ -36,7 +36,7 @@ public class DocVectorIndexBuilder {
 		this.documentHaarVectors2 = new HashMap<>();
 		this.luceneIndexReader = IndexReader.open(FSDirectory.open(new File(
 				this.luceneIndexPath)));
-		vectorFactory = new RandomVectorFactory(64, 0.2f);
+		vectorFactory = new RandomVectorFactory(32, 0.2f);
 		this.termVectors = termVectors;
 		this.docIDPathMap = docIDPathMap;
 	}
@@ -47,18 +47,22 @@ public class DocVectorIndexBuilder {
 		while (termIterator.hasNext()) {
 			String termString = termIterator.next();
 			RandomVector termRandomVector = termVectors.get(termString);
-			TermDocs termDocs = luceneIndexReader.termDocs(new Term("contents",
-					termString));
+			Term term = new Term("contents", termString);
+			TermDocs termDocs = luceneIndexReader.termDocs(term);
+			
+			float globalTermWeight = 0.01f +(float) Math.log10(luceneIndexReader.numDocs()/luceneIndexReader.docFreq(term));
 
 			while (termDocs.next()) {
 				RandomVector documentRandomVector = vectorFactory
 						.getZeroVector();
 				documentRandomVector.add(termRandomVector);
-				float scaleFactor = (float) (1 + Math.log10(1 + Math
-						.log10(termDocs.freq())));
+				//float scaleFactor = (float) (1 + Math.log10(1 + Math
+				//		.log10(termDocs.freq())));
+				
+				float localTermWeight = termDocs.freq();
 
 				// float scaleFactor = (float)(1+Math.log10(termDocs.freq()));
-				documentRandomVector.scaleVector(scaleFactor);
+				documentRandomVector.scaleVector(localTermWeight*globalTermWeight);
 				//documentRandomVector.normalize();
 				int docID = termDocs.doc();
 				String docPath = docIDPathMap.get(docID);
@@ -68,7 +72,6 @@ public class DocVectorIndexBuilder {
 					//tmpRV.normalize();
 					documentVectors.put(docPath, tmpRV);
 				} else {
-
 					documentVectors.put(docPath, documentRandomVector);
 				}
 			}
