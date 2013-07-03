@@ -37,7 +37,7 @@ public class TestDocumentVectorIndexBuilder {
 				+ ((endTime - startTime) / 1000) + " seconds.");
 
 		DocVectorIndexBuilder docIndexBuilder = new DocVectorIndexBuilder(
-				luceneIndexPath, termIndexBuilder.getTermVectors(0),
+				luceneIndexPath, termIndexBuilder.getTermVectors(2),
 				indexProfiler.getDocIDPathMap());
 		docIndexBuilder.buildDoctVectorsAll();
 		endTime = System.currentTimeMillis();

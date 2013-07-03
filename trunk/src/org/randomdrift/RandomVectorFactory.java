@@ -29,7 +29,10 @@ public class RandomVectorFactory {
 			nonZeroEntries = 1;
 
 		for (int i = 0; i < nonZeroEntries; i++) {
-			randomArray[i] = 1.0f;
+			if(i%2 == 0)
+				randomArray[i] = 1.0f;
+			else
+				randomArray[i] = -1.0f;
 		}
 		randomVector.setRandomArray(shuffleArray(randomArray));
 		return randomVector;

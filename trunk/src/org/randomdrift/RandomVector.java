@@ -92,11 +92,13 @@ public class RandomVector {
 	}
 	
 	public void normalize(){
-		float sumOfComponents = 0.0f;
+		float sumOfSquareOfComponents = 0.0f;
 		for(int i = 0; i < dimension; i++){
-			sumOfComponents += (randomArray[i]*randomArray[i]);
+			sumOfSquareOfComponents += (randomArray[i]*randomArray[i]);
 		}
-		float sqrtSumOfComponents = (float) Math.sqrt(sumOfComponents);
+		if(sumOfSquareOfComponents == 0.0f)
+			System.out.println("How can this be?");
+		float sqrtSumOfComponents = (float) Math.sqrt(sumOfSquareOfComponents);
 		for(int i = 0; i < dimension; i++){
 			randomArray[i] = randomArray[i]/sqrtSumOfComponents;
 		}
