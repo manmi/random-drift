@@ -49,27 +49,28 @@ public class DocVectorIndexBuilder {
 			RandomVector termRandomVector = termVectors.get(termString);
 			Term term = new Term("contents", termString);
 			TermDocs termDocs = luceneIndexReader.termDocs(term);
-			
+			//***************************IDF Weighting*******************
 			float globalTermWeight = 0.01f +(float) Math.log10(luceneIndexReader.numDocs()/luceneIndexReader.docFreq(term));
+			//***********************************************************
 
 			while (termDocs.next()) {
 				RandomVector documentRandomVector = vectorFactory
 						.getZeroVector();
 				documentRandomVector.add(termRandomVector);
-				//float scaleFactor = (float) (1 + Math.log10(1 + Math
-				//		.log10(termDocs.freq())));
-				
+							
+				//****************IDF Based Weighting final**********************************
+				//Local_Weight x Global_Weight for Documents
+				//Local weight = termDocs.freq(); 
 				float localTermWeight = termDocs.freq();
+				//**************************************************
 
-				// float scaleFactor = (float)(1+Math.log10(termDocs.freq()));
 				documentRandomVector.scaleVector(localTermWeight*globalTermWeight);
-				//documentRandomVector.normalize();
 				int docID = termDocs.doc();
+				
 				String docPath = docIDPathMap.get(docID);
 				if (documentVectors.containsKey(docPath)) {
 					RandomVector tmpRV = documentVectors.get(docPath);
 					tmpRV.add(documentRandomVector);
-					//tmpRV.normalize();
 					documentVectors.put(docPath, tmpRV);
 				} else {
 					documentVectors.put(docPath, documentRandomVector);
@@ -106,7 +107,9 @@ public class DocVectorIndexBuilder {
 				&& documentVectors.containsKey(docPath2)) {
 			RandomVector doc1RV = documentVectors.get(docPath1);
 			RandomVector doc2RV = documentVectors.get(docPath2);
-			return doc1RV.dotProduct(doc2RV);
+			//return doc1RV.dotProduct(doc2RV);
+			float dotProduct = doc1RV.dotProduct(doc2RV);
+			return (dotProduct/(doc1RV.norm()*doc2RV.norm()));
 		}
 		return 0.0f;
 	}
@@ -126,7 +129,9 @@ public class DocVectorIndexBuilder {
 				&& documentHaarVectors2.containsKey(docPath2)) {
 			RandomVector doc1RV = documentHaarVectors2.get(docPath1);
 			RandomVector doc2RV = documentHaarVectors2.get(docPath2);
-			return doc1RV.dotProduct(doc2RV);
+			float dotProduct = doc1RV.dotProduct(doc2RV);
+			//return (dotProduct/(doc1RV.norm()*doc2RV.norm()));
+			return dotProduct;
 		}
 		return 0.0f;
 	}
