@@ -78,6 +78,14 @@ public class RandomVector {
 		return dotProduct;
 	}
 	
+	public float norm(){
+		float sumSquare =0.0f;
+		for(int i = 0; i < dimension; i++){
+			sumSquare += randomArray[i] * randomArray[i];
+		}
+		return (float)Math.sqrt(sumSquare);
+	}
+	
 	public void scaleVector(float scaleFactor){	
 		for(int i = 0; i < dimension; i++){
 			randomArray[i] = randomArray[i] * scaleFactor;
@@ -104,6 +112,22 @@ public class RandomVector {
 		}
 	}
 	
+	public void enormalize(){
+		float max = 0.0f;
+		float min = 0.0f;
+		for(int i = 0; i < dimension; i++){
+			if(max < randomArray[i]){
+				max = randomArray[i];
+			}
+			if(min > randomArray[i]){
+				min = randomArray[i];
+			}
+		}
+		for(int i = 0; i < dimension; i++){
+			randomArray[i] = randomArray[i]/(max - min);
+		}
+	}
+	
 	//This should be in factory
 	public RandomVector getHaar1D(){
 		RandomVector haarVector = new RandomVector(this.dimension/2); //Assumed dimension is always even number 2^N
@@ -112,7 +136,7 @@ public class RandomVector {
 			haarArray[j] = (randomArray[i] + randomArray[i+1])/2;
 		}
 		haarVector.setRandomArray(haarArray);
-		//haarVector.normalize();
+		haarVector.enormalize();
 		return haarVector;
 	}
 	

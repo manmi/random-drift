@@ -37,7 +37,7 @@ public class TestDocumentVectorIndexBuilder {
 				+ ((endTime - startTime) / 1000) + " seconds.");
 
 		DocVectorIndexBuilder docIndexBuilder = new DocVectorIndexBuilder(
-				luceneIndexPath, termIndexBuilder.getTermVectors(2),
+				luceneIndexPath, termIndexBuilder.getTermVectors(3),
 				indexProfiler.getDocIDPathMap());
 		docIndexBuilder.buildDoctVectorsAll();
 		endTime = System.currentTimeMillis();
@@ -105,33 +105,7 @@ public class TestDocumentVectorIndexBuilder {
 				"out\\19313576.txt", "out\\19313591.txt", "out\\19313597.txt",
 				"out\\19313601.txt", "out\\19313646.txt" };
 
-		int numResults = 5;
-
-		// for(int i = 0; i < docToClassify.length; i++){
-		// StringBuffer resultString = new StringBuffer();
-		// String[] resultClass = new String[numResults];
-		// float[] score = new float[numResults];
-		// String docToClassifyPath = docToClassify[i];
-		// for(int j = 0; j < classes.length; j++){
-		// float simScore = docIndexBuilder.compareDocuments(docToClassifyPath,
-		// classes[j]);
-		// String classStr = classes[j];
-		// for(int k = 0; k < numResults; k++){
-		// if(simScore > score[k]){
-		// float tmp = score[k];
-		// score[k] = simScore;
-		// String tmpClass = resultClass[k];
-		// resultClass[k] = classStr;
-		// simScore = tmp;
-		// classStr = tmpClass;
-		// }
-		// }
-		// }
-		// for(int l = 0; l < numResults; l++){
-		// resultString.append(resultClass[l] + ",");
-		// }
-		// System.out.println(docToClassify[i] + "," + resultString.toString());
-		// }
+		
 
 		// Now do the classification
 		for (int i = 0; i < docToClassify.length; i++) {
