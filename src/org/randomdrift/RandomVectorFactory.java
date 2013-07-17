@@ -7,11 +7,50 @@ public class RandomVectorFactory {
 	final float density;
 	final int dimension;
 	Random random;
+	HaarTransformer haarTransformer;
 
 	public RandomVectorFactory(int dimension, float density) {
 		this.dimension = dimension;
 		this.density = density;
-		this.random = new Random();
+		this.haarTransformer = new HaarTransformer();
+		//this.random = new Random();
+		this.random = new Random(9);
+	}
+	
+	public RandomVector getHaarForward(RandomVector inputRV, int sumLen){
+		RandomVector rv = new RandomVector(inputRV.getDimension());
+		float[] sdArray = haarTransformer.getForward(inputRV.getRandomArray(), sumLen);
+		rv.setRandomArray(sdArray);
+		return rv;
+	}
+	
+	public RandomVector enhanceFeatureHaar(RandomVector inputRV, int sumLen){
+		RandomVector inputCopy = getCopy(inputRV);
+		float[] randomArray = inputCopy.getRandomArray();
+		//set the s to zero
+		for(int i = 0; i < sumLen; i++){
+			randomArray[i] = 0;
+		}
+		inputCopy.setRandomArray(randomArray);
+		return getHaarReverse(inputCopy, sumLen, 100.0f);
+	}
+	
+	public RandomVector enhanceLatencyHaar(RandomVector inputRV, int sumLen){
+		RandomVector inputCopy = getCopy(inputRV);
+		float[] randomArray = inputCopy.getRandomArray();
+		//set the d's to zero
+		for(int i = sumLen - 1; i < randomArray.length; i++){
+			randomArray[i] = 0.0f;
+		}
+		inputCopy.setRandomArray(randomArray);
+		return getHaarReverse(inputCopy, sumLen, 100.0f);
+	}
+	
+	public RandomVector getHaarReverse(RandomVector inputRV, int sumLen, float threshold){
+		RandomVector rv = new RandomVector(inputRV.getDimension());
+		float[] sdArray = haarTransformer.getReverse(inputRV.getRandomArray(), sumLen, threshold);
+		rv.setRandomArray(sdArray);
+		return rv;
 	}
 
 	public RandomVector getZeroVector() {

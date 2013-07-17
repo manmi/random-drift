@@ -19,11 +19,7 @@ public class TermVectorIndexBuilder {
 	// private HashMap<Term, RandomVector> termVectors;
 	private HashMap<String, RandomVector> termVectors0;
 	private HashMap<String, RandomVector> termVectors1;
-	private HashMap<String, RandomVector> termVectors2;
-	private HashMap<String, RandomVector> termVectors3;
-	private HashMap<String, RandomVector> termVectors4;
-	private HashMap<String, RandomVector> termVectors5;
-	private HashMap<String, RandomVector> termVectors6;
+	
 	private HashMap<String, RandomVector> contextVectors;
 	private IndexReader luceneIndexReader;
 	private final String luceneIndexPath;
@@ -31,6 +27,7 @@ public class TermVectorIndexBuilder {
 	private Map<Integer, Integer> numTermsInDoc;
 	private Map<String, Integer> termGlobalFreq;
 	private Map<Integer, String> docIDPathMap;
+	private HaarTransformer haarTransformer;
 	private int totalNumberOfTerms;
 	private int totalNumberOfDocs;
 
@@ -42,11 +39,6 @@ public class TermVectorIndexBuilder {
 		this.luceneIndexPath = luceneIndexPath;
 		this.termVectors0 = new HashMap<>();
 		this.termVectors1 = new HashMap<>();
-		this.termVectors2 = new HashMap<>();
-		this.termVectors3 = new HashMap<>();
-		this.termVectors4 = new HashMap<>();
-		this.termVectors5 = new HashMap<>();
-		this.termVectors6 = new HashMap<>();
 		this.contextVectors = new HashMap<>();
 		this.luceneIndexReader = IndexReader.open(FSDirectory.open(new File(
 				this.luceneIndexPath)));
@@ -55,6 +47,7 @@ public class TermVectorIndexBuilder {
 		this.docIDPathMap = docIDPathMap;
 		this.totalNumberOfTerms = totalNumberOfTerms;
 		this.totalNumberOfDocs = docIDPathMap.size();
+		this.haarTransformer = new HaarTransformer();
 
 		vectorFactory = new RandomVectorFactory(256, 0.2f);
 	}
@@ -63,18 +56,27 @@ public class TermVectorIndexBuilder {
 		Iterator<String> termIterator = termVectors0.keySet().iterator();
 		while(termIterator.hasNext()){
 			String term = termIterator.next();
-			RandomVector haarVector1 = (termVectors0.get(term)).getHaar1D();
-			RandomVector haarVector2 = haarVector1.getHaar1D();
-			RandomVector haarVector3 = haarVector2.getHaar1D();
-			RandomVector haarVector4 = haarVector3.getHaar1D();
-			RandomVector haarVector5 = haarVector4.getHaar1D();
-			RandomVector haarVector6 = haarVector5.getHaar1D();
-			termVectors1.put(term, haarVector1);
-			termVectors2.put(term, haarVector2);
-			termVectors3.put(term, haarVector3);
-			termVectors4.put(term, haarVector4);
-			termVectors5.put(term, haarVector5);
-			termVectors6.put(term, haarVector6);
+			RandomVector termRV = vectorFactory.getCopy(termVectors0.get(term));
+			RandomVector haarForwardRV1 = vectorFactory.getHaarForward(termRV, 256);
+			RandomVector haarForwardRV2 = vectorFactory.getHaarForward(haarForwardRV1, 128);
+			RandomVector haarForwardRV3 = vectorFactory.getHaarForward(haarForwardRV2, 64);
+			RandomVector haarForwardRV4	= vectorFactory.getHaarForward(haarForwardRV3, 32);
+			RandomVector haarForwardRV5	= vectorFactory.getHaarForward(haarForwardRV4, 16);
+			
+//			RandomVector latencyHaar3 = vectorFactory.enhanceLatencyHaar(haarForwardRV3, 32);
+//			RandomVector latencyHaar2 = vectorFactory.enhanceLatencyHaar(haarForwardRV2,64);
+			RandomVector latencyHaar1 = vectorFactory.enhanceLatencyHaar(haarForwardRV1, 128);
+			
+			RandomVector enhanceHaar5 = vectorFactory.enhanceFeatureHaar(haarForwardRV5, 8);
+			RandomVector enhanceHaar4 = vectorFactory.enhanceFeatureHaar(enhanceHaar5, 16);
+			RandomVector enhanceHaar3 = vectorFactory.enhanceFeatureHaar(enhanceHaar4, 32);
+			RandomVector enhanceHaar2 = vectorFactory.enhanceFeatureHaar(enhanceHaar3, 64);
+			RandomVector enhanceHaar1 = vectorFactory.enhanceFeatureHaar(enhanceHaar2, 128);
+			
+			latencyHaar1.add(enhanceHaar1);
+			
+			
+			termVectors1.put(term, latencyHaar1);
 		}
 	}
 
@@ -86,18 +88,18 @@ public class TermVectorIndexBuilder {
 		switch (order) {
 		case 0:
 			return termVectors0;
-		case 1:
+	case 1:
 			return termVectors1;
-		case 2:
-			return termVectors2;
-		case 3:
-			return termVectors3;
-		case 4:
-			return termVectors4;
-		case 5:
-			return termVectors5;
-		case 6:
-			return termVectors6;
+//		case 2:
+//			return termVectors2;
+//		case 3:
+//			return termVectors3;
+//		case 4:
+//			return termVectors4;
+//		case 5:
+//			return termVectors5;
+//		case 6:
+//			return termVectors6;
 		default:
 			return null;
 		}
@@ -143,9 +145,7 @@ public class TermVectorIndexBuilder {
 		Iterator<String> termVectorIterator = termVectors0.keySet().iterator();
 		while(termVectorIterator.hasNext()){
 			String term = termVectorIterator.next();
-			RandomVector rv = termVectors0.get(term);
-			
-			
+			RandomVector rv = termVectors0.get(term);	
 			rv.normalize();
 			float test = rv.getRandomArray()[2];
 			if(Float.isNaN(test))
