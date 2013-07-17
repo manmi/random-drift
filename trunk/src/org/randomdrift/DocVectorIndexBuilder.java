@@ -13,11 +13,12 @@ import org.apache.lucene.store.FSDirectory;
 
 public class DocVectorIndexBuilder {
 
-	private HashMap<String, RandomVector> documentVectors; // Map of docPath to
+	private HashMap<String, RandomVector> documentVectors0; // Map of docPath to
 															// document random
 															// vectors
-	private HashMap<String, RandomVector> documentHaarVectors;
-	private HashMap<String, RandomVector> documentHaarVectors2;
+	private HashMap<String, RandomVector> documentVectors1;
+	
+	
 	private IndexReader luceneIndexReader;
 	private final String luceneIndexPath;
 	private RandomVectorFactory vectorFactory;
@@ -31,17 +32,17 @@ public class DocVectorIndexBuilder {
 			IOException {
 
 		this.luceneIndexPath = luceneIndexPath;
-		this.documentVectors = new HashMap<String, RandomVector>();
-		this.documentHaarVectors = new HashMap<>();
-		this.documentHaarVectors2 = new HashMap<>();
+		this.documentVectors0 = new HashMap<String, RandomVector>();
+		this.documentVectors1 = new HashMap<>();
+		
 		this.luceneIndexReader = IndexReader.open(FSDirectory.open(new File(
 				this.luceneIndexPath)));
-		vectorFactory = new RandomVectorFactory(32, 0.2f);
+		vectorFactory = new RandomVectorFactory(256, 0.2f);
 		this.termVectors = termVectors;
 		this.docIDPathMap = docIDPathMap;
 	}
 
-	public void buildDoctVectorsAll() throws IOException {
+	public void buildDocVectorsAll() throws IOException {
 		// Iterate through the termVectors and get the TermFreqVector
 		Iterator<String> termIterator = termVectors.keySet().iterator();
 		while (termIterator.hasNext()) {
@@ -68,45 +69,84 @@ public class DocVectorIndexBuilder {
 				int docID = termDocs.doc();
 				
 				String docPath = docIDPathMap.get(docID);
-				if (documentVectors.containsKey(docPath)) {
-					RandomVector tmpRV = documentVectors.get(docPath);
+				if (documentVectors0.containsKey(docPath)) {
+					RandomVector tmpRV = documentVectors0.get(docPath);
 					tmpRV.add(documentRandomVector);
-					documentVectors.put(docPath, tmpRV);
+					documentVectors0.put(docPath, tmpRV);
 				} else {
-					documentVectors.put(docPath, documentRandomVector);
+					documentVectors0.put(docPath, documentRandomVector);
 				}
 			}
 		}
 		normalizeDocVectors();
 	}
 	
-	public void normalizeDocVectors(){
-		Iterator<String> docVectorIterator = documentVectors.keySet().iterator();
+	public void buildHaarDocVectorsAll(){
+		Iterator<String> docVectorIterator = documentVectors0.keySet().iterator();
 		while(docVectorIterator.hasNext()){
 			String docPath = docVectorIterator.next();
-			RandomVector rv = documentVectors.get(docPath);
+			RandomVector docRVCopy = vectorFactory.getCopy(documentVectors0.get(docPath));
+//			RandomVector haarForward1 = vectorFactory.getHaarForward(docRVCopy, 256);
+//			RandomVector haarForward2 = vectorFactory.getHaarForward(haarForward1, 128);
+//			RandomVector haarForward3 = vectorFactory.getHaarForward(haarForward2, 64);
+//			RandomVector haarForward4 = vectorFactory.getHaarForward(haarForward3, 32);
+//			RandomVector haarForward5 = vectorFactory.getHaarForward(haarForward4, 16);
+//			RandomVector haarForward6 = vectorFactory.getHaarForward(haarForward5, 8);
+//			//RandomVector haarForward7 = vectorFactory.getHaarForward(haarForward6, 4);
+//			
+//			RandomVector enhancedLat4 = vectorFactory.enhanceLatencyHaar(haarForward4, 16);
+//			RandomVector enhancedLat3 = vectorFactory.enhanceLatencyHaar(haarForward3, 32);
+//			RandomVector enhancedLat2 = vectorFactory.enhanceLatencyHaar(enhancedLat3, 64);
+//			RandomVector enhancedLat1 = vectorFactory.enhanceLatencyHaar(enhancedLat2, 128);
+//	
+//			//RandomVector enhancedFea7 = vectorFactory.enhanceFeatureHaar(haarForward7, 2);
+//			RandomVector enhancedFea6 = vectorFactory.enhanceFeatureHaar(haarForward6, 4);
+//			RandomVector enhancedFea5 = vectorFactory.enhanceFeatureHaar(enhancedFea6, 8);
+//			RandomVector enhancedFea4 = vectorFactory.enhanceFeatureHaar(enhancedFea5, 16);
+//			RandomVector enhancedFea3 = vectorFactory.enhanceFeatureHaar(enhancedFea4, 32);
+//			RandomVector enhancedFea2 = vectorFactory.enhanceFeatureHaar(enhancedFea3, 64);
+//			RandomVector enhancedFea1 = vectorFactory.enhanceFeatureHaar(enhancedFea2, 128);
+			
+//			enhancedLat1.add(enhancedFea1);
+			
+			
+			documentVectors1.put(docPath, docRVCopy);
+		}
+	}
+	
+	public Map<String, RandomVector> getDocVectors(){
+		return documentVectors0;
+	}
+	
+	public void normalizeDocVectors(){
+		Iterator<String> docVectorIterator = documentVectors0.keySet().iterator();
+		while(docVectorIterator.hasNext()){
+			String docPath = docVectorIterator.next();
+			RandomVector rv = documentVectors0.get(docPath);
 			rv.normalize();
-			documentVectors.put(docPath, rv);
+			documentVectors0.put(docPath, rv);
 		}
 	}
 
-	public void buildHaar1DIndex() {
-		Iterator<String> docIterator = documentVectors.keySet().iterator();
-		while (docIterator.hasNext()) {
-			String docPath = docIterator.next();
-			RandomVector haarVector = (documentVectors.get(docPath))
-					.getHaar1D();
-			RandomVector haarVector2 = haarVector.getHaar1D();
-			documentHaarVectors.put(docPath, haarVector);
-			documentHaarVectors2.put(docPath, haarVector2);
-		}
-	}
+	
 
 	public float compareDocuments(String docPath1, String docPath2) {
-		if (documentVectors.containsKey(docPath1)
-				&& documentVectors.containsKey(docPath2)) {
-			RandomVector doc1RV = documentVectors.get(docPath1);
-			RandomVector doc2RV = documentVectors.get(docPath2);
+		if (documentVectors0.containsKey(docPath1)
+				&& documentVectors0.containsKey(docPath2)) {
+			RandomVector doc1RV = documentVectors0.get(docPath1);
+			RandomVector doc2RV = documentVectors0.get(docPath2);
+			//return doc1RV.dotProduct(doc2RV);
+			float dotProduct = doc1RV.dotProduct(doc2RV);
+			return (dotProduct/(doc1RV.norm()*doc2RV.norm()));
+		}
+		return 0.0f;
+	}
+	
+	public float compareDocumentsInHaar(String docPath1, String docPath2) {
+		if (documentVectors1.containsKey(docPath1)
+				&& documentVectors1.containsKey(docPath2)) {
+			RandomVector doc1RV = documentVectors1.get(docPath1);
+			RandomVector doc2RV = documentVectors1.get(docPath2);
 			//return doc1RV.dotProduct(doc2RV);
 			float dotProduct = doc1RV.dotProduct(doc2RV);
 			return (dotProduct/(doc1RV.norm()*doc2RV.norm()));
@@ -114,29 +154,13 @@ public class DocVectorIndexBuilder {
 		return 0.0f;
 	}
 
-	public float compareDocumentsInHaar(String docPath1, String docPath2) {
-		if (documentHaarVectors.containsKey(docPath1)
-				&& documentHaarVectors.containsKey(docPath2)) {
-			RandomVector doc1RV = documentHaarVectors.get(docPath1);
-			RandomVector doc2RV = documentHaarVectors.get(docPath2);
-			return doc1RV.dotProduct(doc2RV);
-		}
-		return 0.0f;
-	}
+	
 
-	public float compareDocumentsInHaar2(String docPath1, String docPath2) {
-		if (documentHaarVectors2.containsKey(docPath1)
-				&& documentHaarVectors2.containsKey(docPath2)) {
-			RandomVector doc1RV = documentHaarVectors2.get(docPath1);
-			RandomVector doc2RV = documentHaarVectors2.get(docPath2);
-			float dotProduct = doc1RV.dotProduct(doc2RV);
-			//return (dotProduct/(doc1RV.norm()*doc2RV.norm()));
-			return dotProduct;
-		}
-		return 0.0f;
+	public RandomVector getDocRandomVectorHaar(String docPath){
+		return documentVectors1.get(docPath);
 	}
 
 	public RandomVector getDocRandomVector(String docPath) {
-		return documentVectors.get(docPath);
+		return documentVectors0.get(docPath);
 	}
 }

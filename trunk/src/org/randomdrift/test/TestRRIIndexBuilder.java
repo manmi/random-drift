@@ -1,52 +1,64 @@
 package org.randomdrift.test;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.lucene.index.CorruptIndexException;
 import org.randomdrift.DocVectorIndexBuilder;
 import org.randomdrift.LuceneIndexProfiler;
+import org.randomdrift.RRIIndexBuilder;
 import org.randomdrift.TermVectorIndexBuilder;
+import org.randomdrift.RandomVector;
 
-public class TestDocumentVectorIndexBuilder {
-
-	public static void main(String[] args) throws CorruptIndexException,
-			IOException {
-
+public class TestRRIIndexBuilder {
+	
+	public static void main(String[] args) throws CorruptIndexException, IOException{
+		
 		String luceneIndexPath = "E:\\Corpora\\Toi4\\index";
-		// Build the term vectors
-
-		LuceneIndexProfiler indexProfiler = new LuceneIndexProfiler(
-				luceneIndexPath);
+		
+		LuceneIndexProfiler indexProfiler = new LuceneIndexProfiler(luceneIndexPath);
 		long startTime = System.currentTimeMillis();
 		indexProfiler.profile();
 		long endTime = System.currentTimeMillis();
-		System.out.println("Time taken to profile lucene index: "
-				+ ((endTime - startTime) / 1000) + " seconds.");
-
-		TermVectorIndexBuilder termIndexBuilder = new TermVectorIndexBuilder(
-				luceneIndexPath, indexProfiler.getTotalNumberOfTerms(),
-				indexProfiler.getNumTermsInDoc(),
-				indexProfiler.getTermGlobalFreq(),
-				indexProfiler.getDocIDPathMap());
+		System.out.println("Time to profile lucene index: " + ((endTime - startTime)/1000) + " seconds.");
+		TermVectorIndexBuilder termIndexBuilder = new TermVectorIndexBuilder(luceneIndexPath, indexProfiler.getTotalNumberOfTerms(), indexProfiler.getNumTermsInDoc(), indexProfiler.getTermGlobalFreq(), indexProfiler.getDocIDPathMap());
 		startTime = System.currentTimeMillis();
 		termIndexBuilder.buildTermVectorsAll();
-		termIndexBuilder.buildTermHaarVectors();
 		endTime = System.currentTimeMillis();
-		System.out.println("Time taken to build complete term vector: "
-				+ ((endTime - startTime) / 1000) + " seconds.");
-
-		DocVectorIndexBuilder docIndexBuilder = new DocVectorIndexBuilder(
-				luceneIndexPath, termIndexBuilder.getTermVectors(1),
-				indexProfiler.getDocIDPathMap());
+		System.out.println("Time taken to build complete term vector: " + ((endTime - startTime)/1000) + " seconds.");
+		
+		startTime = System.currentTimeMillis();
+		DocVectorIndexBuilder docIndexBuilder = new DocVectorIndexBuilder(luceneIndexPath, termIndexBuilder.getTermVectors(), indexProfiler.getDocIDPathMap());
 		docIndexBuilder.buildDocVectorsAll();
-		docIndexBuilder.buildHaarDocVectorsAll();
 		endTime = System.currentTimeMillis();
 		System.out.println("Time taken to build complete doc vectors: "
 				+ ((endTime - startTime) / 1000) + " seconds.");
-
 		
-
+		startTime = System.currentTimeMillis();
+		//Build the reflective indexes three times.
+		RRIIndexBuilder rriIndexBuilder = new RRIIndexBuilder(luceneIndexPath, indexProfiler.getDocIDPathMap(), indexProfiler.getTermGlobalFreq());
+		
+		//second training
+		rriIndexBuilder.buildRRITermIndex(termIndexBuilder.getTermVectors(), docIndexBuilder.getDocVectors());
+		Map<String, RandomVector> rriTermVector = rriIndexBuilder.getTermVectors();
+		rriIndexBuilder.buildRRTDocumentIndex(rriTermVector);
+		Map<String, RandomVector> rriDocVector = rriIndexBuilder.getDocVectors();
+		System.out.println("second training completed");
+		
+		//third training
+		rriIndexBuilder.buildRRITermIndex(rriTermVector, rriDocVector);
+		rriTermVector = rriIndexBuilder.getTermVectors();
+		rriIndexBuilder.buildRRTDocumentIndex(rriTermVector);
+		rriDocVector = rriIndexBuilder.getDocVectors();
+		System.out.println("third training completed");
+		
+		//final build
+		rriIndexBuilder.buildRRITermIndex(rriTermVector, rriDocVector);
+		rriTermVector = rriIndexBuilder.getTermVectors();
+		rriIndexBuilder.buildRRTDocumentIndex(rriTermVector);
+		endTime = System.currentTimeMillis();
+		System.out.println("Time taken to build reflective index: " + ((endTime - startTime)/1000) + " seconds.");
+		
 		String[] classes = { "classes\\business.txt", "classes\\crime.txt",
 				"classes\\decor.txt", "classes\\entertainment.txt",
 				"classes\\fashion.txt", "classes\\food.txt",
@@ -54,23 +66,7 @@ public class TestDocumentVectorIndexBuilder {
 				"classes\\religon.txt", "classes\\scitech.txt",
 				"classes\\lifestyle.txt", "classes\\sports.txt",
 				"classes\\travel.txt" };
-
-		// String[] docToClassify = {
-		// "classes\\business.txt",
-		// "classes\\crime.txt",
-		// "classes\\decor.txt",
-		// "classes\\entertainment.txt",
-		// "classes\\fashion.txt",
-		// "classes\\food.txt",
-		// "classes\\health.txt",
-		// "classes\\politics.txt",
-		// "classes\\religon.txt",
-		// "classes\\scitech.txt",
-		// "classes\\sexadvice.txt",
-		// "classes\\sports.txt",
-		// "classes\\travel.txt"
-		// };
-
+		
 		String[] docToClassify = { "out\\19288983.txt", "out\\19289044.txt",
 				"out\\19289051.txt", "out\\19289084.txt", "out\\19289100.txt",
 				"out\\19289137.txt", "out\\19289166.txt", "out\\19289243.txt",
@@ -105,10 +101,7 @@ public class TestDocumentVectorIndexBuilder {
 				"out\\19313557.txt", "out\\19313559.txt", "out\\19313569.txt",
 				"out\\19313576.txt", "out\\19313591.txt", "out\\19313597.txt",
 				"out\\19313601.txt", "out\\19313646.txt" };
-
 		
-
-		// Now do the classification
 		for (int i = 0; i < docToClassify.length; i++) {
 			String docToClassifyPath = docToClassify[i];
 			float top1 = 0.0f;
@@ -123,7 +116,7 @@ public class TestDocumentVectorIndexBuilder {
 			String top5Class = null;
 
 			for (int j = 0; j < classes.length; j++) {
-				float simScore = docIndexBuilder.compareDocumentsInHaar(
+				float simScore = rriIndexBuilder.compareDocuments(
 						docToClassifyPath, classes[j]);
 				if (simScore > top1) {
 					top5 = top4;
@@ -167,18 +160,8 @@ public class TestDocumentVectorIndexBuilder {
 					+ top5Class);
 //			System.out.println(docIndexBuilder.getDocRandomVector(
 //					docToClassifyPath).toString());
+			
 		}
-
-//		for (int k = 0; k < classes.length; k++) {
-//			System.out
-//					.println(classes[k]
-//							+ " | "
-//							+ docIndexBuilder.getDocRandomVector(classes[k])
-//									.toString());
-//		}
-		
-		System.out.println(docIndexBuilder.getDocRandomVector("classes\\scitech.txt"));
-		System.out.println(docIndexBuilder.getDocRandomVectorHaar("classes\\scitech.txt"));
+		System.out.println((rriIndexBuilder.getDocRandomVector("classes\\scitech.txt")).toString());
 	}
-
 }

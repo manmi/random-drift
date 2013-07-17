@@ -5,10 +5,11 @@ package org.randomdrift;
 public class HaarTransformer {
 	
 	public float[] getForward(float[] input, int sumLen){
+		float normFactor = (float) Math.sqrt(2);
 		float[] output = new float[input.length];
 		for(int i = 0; i < sumLen/2; i++){
-			output[i] = (input[2*i] + input[2*i+1])/2;
-			output[i + sumLen/2] = input[2*i] - output[i];
+			output[i] = normFactor * ((input[2*i] + input[2*i+1])/2);
+			output[i + sumLen/2] = (input[2*i] - output[i])/normFactor;
 		}
 		if(sumLen < input.length){
 			for(int i = sumLen; i < input.length; i++){
@@ -19,11 +20,12 @@ public class HaarTransformer {
 	}
 	
 	public float[] getReverse(float[] input, int sumLen, float threshold){
+		float normFactor = (float) Math.sqrt(2);
 		float[] output = new float[input.length];
 		for(int i = 0; i < sumLen * 2; i+=2){
 			if(Math.abs(input[sumLen+i/2])<threshold){
-				output[i] = input[i/2] + input[sumLen + i/2];
-				output[i+1] = input[i/2] - input[sumLen + i/2];
+				output[i] = (input[i/2] + input[sumLen + i/2])/normFactor;
+				output[i+1] = (input[i/2] - input[sumLen + i/2])/normFactor;
 			}else{
 				output[i] = input[i/2] + Math.copySign(threshold, input[sumLen + i/2]);
 				output[i+1] = input[i/2] - Math.copySign(threshold, input[sumLen + i/2]);
