@@ -123,7 +123,7 @@ public class TestDocumentVectorIndexBuilder {
 			String top5Class = null;
 
 			for (int j = 0; j < classes.length; j++) {
-				float simScore = docIndexBuilder.compareDocumentsInHaar(
+				float simScore = docIndexBuilder.compareDocuments(
 						docToClassifyPath, classes[j]);
 				if (simScore > top1) {
 					top5 = top4;
@@ -177,8 +177,8 @@ public class TestDocumentVectorIndexBuilder {
 //									.toString());
 //		}
 		
-		System.out.println(docIndexBuilder.getDocRandomVector("classes\\scitech.txt"));
-		System.out.println(docIndexBuilder.getDocRandomVectorHaar("classes\\scitech.txt"));
+		//System.out.println(docIndexBuilder.getDocRandomVector("classes\\scitech.txt"));
+		//System.out.println(docIndexBuilder.getDocRandomVectorHaar("classes\\scitech.txt"));
 	}
 
 }

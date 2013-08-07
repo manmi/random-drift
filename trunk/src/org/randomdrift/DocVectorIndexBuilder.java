@@ -37,7 +37,7 @@ public class DocVectorIndexBuilder {
 		
 		this.luceneIndexReader = IndexReader.open(FSDirectory.open(new File(
 				this.luceneIndexPath)));
-		vectorFactory = new RandomVectorFactory(256, 0.2f);
+		vectorFactory = new RandomVectorFactory(2048, 0.1f);
 		this.termVectors = termVectors;
 		this.docIDPathMap = docIDPathMap;
 	}
@@ -83,35 +83,37 @@ public class DocVectorIndexBuilder {
 	
 	public void buildHaarDocVectorsAll(){
 		Iterator<String> docVectorIterator = documentVectors0.keySet().iterator();
-		while(docVectorIterator.hasNext()){
-			String docPath = docVectorIterator.next();
-			RandomVector docRVCopy = vectorFactory.getCopy(documentVectors0.get(docPath));
+//		while(docVectorIterator.hasNext()){
+//			String docPath = docVectorIterator.next();
+//			RandomVector docRVCopy = vectorFactory.getCopy(documentVectors0.get(docPath));
 //			RandomVector haarForward1 = vectorFactory.getHaarForward(docRVCopy, 256);
 //			RandomVector haarForward2 = vectorFactory.getHaarForward(haarForward1, 128);
 //			RandomVector haarForward3 = vectorFactory.getHaarForward(haarForward2, 64);
 //			RandomVector haarForward4 = vectorFactory.getHaarForward(haarForward3, 32);
-//			RandomVector haarForward5 = vectorFactory.getHaarForward(haarForward4, 16);
-//			RandomVector haarForward6 = vectorFactory.getHaarForward(haarForward5, 8);
-//			//RandomVector haarForward7 = vectorFactory.getHaarForward(haarForward6, 4);
-//			
+////			RandomVector haarForward5 = vectorFactory.getHaarForward(haarForward4, 16);
+////			RandomVector haarForward6 = vectorFactory.getHaarForward(haarForward5, 8);
+////			//RandomVector haarForward7 = vectorFactory.getHaarForward(haarForward6, 4);
+////			
 //			RandomVector enhancedLat4 = vectorFactory.enhanceLatencyHaar(haarForward4, 16);
-//			RandomVector enhancedLat3 = vectorFactory.enhanceLatencyHaar(haarForward3, 32);
+//			RandomVector enhancedLat3 = vectorFactory.enhanceLatencyHaar(enhancedLat4, 32);
 //			RandomVector enhancedLat2 = vectorFactory.enhanceLatencyHaar(enhancedLat3, 64);
 //			RandomVector enhancedLat1 = vectorFactory.enhanceLatencyHaar(enhancedLat2, 128);
-//	
-//			//RandomVector enhancedFea7 = vectorFactory.enhanceFeatureHaar(haarForward7, 2);
-//			RandomVector enhancedFea6 = vectorFactory.enhanceFeatureHaar(haarForward6, 4);
-//			RandomVector enhancedFea5 = vectorFactory.enhanceFeatureHaar(enhancedFea6, 8);
-//			RandomVector enhancedFea4 = vectorFactory.enhanceFeatureHaar(enhancedFea5, 16);
-//			RandomVector enhancedFea3 = vectorFactory.enhanceFeatureHaar(enhancedFea4, 32);
-//			RandomVector enhancedFea2 = vectorFactory.enhanceFeatureHaar(enhancedFea3, 64);
-//			RandomVector enhancedFea1 = vectorFactory.enhanceFeatureHaar(enhancedFea2, 128);
-			
-//			enhancedLat1.add(enhancedFea1);
-			
-			
-			documentVectors1.put(docPath, docRVCopy);
-		}
+////	
+////			//RandomVector enhancedFea7 = vectorFactory.enhanceFeatureHaar(haarForward7, 2);
+////			RandomVector enhancedFea6 = vectorFactory.enhanceFeatureHaar(haarForward6, 4);
+////			RandomVector enhancedFea5 = vectorFactory.enhanceFeatureHaar(enhancedFea6, 8);
+////			RandomVector enhancedFea4 = vectorFactory.enhanceFeatureHaar(enhancedFea5, 16);
+////			RandomVector enhancedFea3 = vectorFactory.enhanceFeatureHaar(enhancedFea4, 32);
+////			RandomVector enhancedFea2 = vectorFactory.enhanceFeatureHaar(enhancedFea3, 64);
+////			RandomVector enhancedFea1 = vectorFactory.enhanceFeatureHaar(enhancedFea2, 128);
+//			
+////			enhancedLat1.add(enhancedFea1);
+//			docRVCopy.add(enhancedLat1);
+//			docRVCopy.normalize();
+//			
+//			
+//			documentVectors1.put(docPath, docRVCopy);
+//		}
 	}
 	
 	public Map<String, RandomVector> getDocVectors(){

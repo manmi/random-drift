@@ -10,6 +10,7 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.store.FSDirectory;
 
 public class RRIIndexBuilder {
@@ -141,6 +142,34 @@ public class RRIIndexBuilder {
 			rv.normalize();
 			documentVectors.put(docPath, rv);
 		}
+	}
+	
+	public void indexDocument(String docPath, TermFreqVector termFreqVector) throws IOException{
+		
+		RandomVector docVector = vectorFactory.getZeroVector();
+		String[] terms = termFreqVector.getTerms();
+		int[] termFreq = termFreqVector.getTermFrequencies();
+		
+		for(int i = 0; i < terms.length; i++){
+			if(termVectors.containsKey(terms[i])){
+				docVector.add(termVectors.get(terms[i]));
+				float globalTermWeight = 0.01f + (float) Math
+						.log10(luceneIndexReader.numDocs()
+								/ luceneIndexReader.docFreq(new Term("contents", terms[i])));
+				docVector.scaleVector(globalTermWeight * termFreq[i]);
+			}
+		}
+		docVector.normalize();
+		documentVectors.put(docPath, docVector);
+	}
+	
+	public boolean stringIsAlpha(String term){
+		char[] chars = term.toCharArray();
+		for(char c:chars){
+			if(!Character.isAlphabetic(c))
+				return false;
+		}
+		return true;
 	}
 	
 	public float compareDocuments(String docPath1, String docPath2) {
