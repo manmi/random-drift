@@ -49,7 +49,7 @@ public class TermVectorIndexBuilder {
 		this.totalNumberOfDocs = docIDPathMap.size();
 		this.haarTransformer = new HaarTransformer();
 
-		vectorFactory = new RandomVectorFactory(256, 0.2f);
+		vectorFactory = new RandomVectorFactory(2048, 0.005f);
 	}
 	
 	public void buildTermHaarVectors(){
@@ -57,26 +57,32 @@ public class TermVectorIndexBuilder {
 		while(termIterator.hasNext()){
 			String term = termIterator.next();
 			RandomVector termRV = vectorFactory.getCopy(termVectors0.get(term));
-			RandomVector haarForwardRV1 = vectorFactory.getHaarForward(termRV, 256);
+			RandomVector haarForwardRV_2 = vectorFactory.getHaarForward(termRV, 2048);
+			RandomVector haarForwardRV_1 = vectorFactory.getHaarForward(haarForwardRV_2, 1024);
+			RandomVector haarForwardRV0 = vectorFactory.getHaarForward(haarForwardRV_1, 512);
+			RandomVector haarForwardRV1 = vectorFactory.getHaarForward(haarForwardRV0, 256);
 			RandomVector haarForwardRV2 = vectorFactory.getHaarForward(haarForwardRV1, 128);
 			RandomVector haarForwardRV3 = vectorFactory.getHaarForward(haarForwardRV2, 64);
 			RandomVector haarForwardRV4	= vectorFactory.getHaarForward(haarForwardRV3, 32);
-			RandomVector haarForwardRV5	= vectorFactory.getHaarForward(haarForwardRV4, 16);
+			RandomVector haarForwardRV5 = vectorFactory.getHaarForward(haarForwardRV4, 16);
+			RandomVector haarForwardRV6 = vectorFactory.getHaarForward(haarForwardRV5,8);
+			//RandomVector haarForwardRV7 = vectorFactory.getHaarForward(haarForwardRV6, 4);
+
+			//RandomVector lat6 = vectorFactory.enhanceLatencyHaar(haarForwardRV7, 2);
+			RandomVector lat5 = vectorFactory.enhanceLatencyHaar(haarForwardRV6, 4);
+			RandomVector lat4 = vectorFactory.enhanceLatencyHaar(lat5, 8);
+			RandomVector lat3 = vectorFactory.enhanceLatencyHaar(lat4, 16);
+			RandomVector lat2 = vectorFactory.enhanceLatencyHaar(lat3, 32);
+			RandomVector lat1 = vectorFactory.enhanceLatencyHaar(lat2, 64);
+			RandomVector lat0 = vectorFactory.enhanceLatencyHaar(lat1, 128);
+			RandomVector lat = vectorFactory.enhanceLatencyHaar(lat0, 256);
+			RandomVector lat_1 = vectorFactory.enhanceLatencyHaar(lat, 512);
+			RandomVector lat_2 = vectorFactory.enhanceLatencyHaar(lat_1, 1024);
 			
-//			RandomVector latencyHaar3 = vectorFactory.enhanceLatencyHaar(haarForwardRV3, 32);
-//			RandomVector latencyHaar2 = vectorFactory.enhanceLatencyHaar(haarForwardRV2,64);
-			RandomVector latencyHaar1 = vectorFactory.enhanceLatencyHaar(haarForwardRV1, 128);
-			
-			RandomVector enhanceHaar5 = vectorFactory.enhanceFeatureHaar(haarForwardRV5, 8);
-			RandomVector enhanceHaar4 = vectorFactory.enhanceFeatureHaar(enhanceHaar5, 16);
-			RandomVector enhanceHaar3 = vectorFactory.enhanceFeatureHaar(enhanceHaar4, 32);
-			RandomVector enhanceHaar2 = vectorFactory.enhanceFeatureHaar(enhanceHaar3, 64);
-			RandomVector enhanceHaar1 = vectorFactory.enhanceFeatureHaar(enhanceHaar2, 128);
-			
-			latencyHaar1.add(enhanceHaar1);
-			
-			
-			termVectors1.put(term, latencyHaar1);
+			termRV.add(lat_2);	
+			termRV.normalize();
+		
+			termVectors1.put(term, termRV);
 		}
 	}
 

@@ -39,7 +39,7 @@ public class RandomVectorFactory {
 		RandomVector inputCopy = getCopy(inputRV);
 		float[] randomArray = inputCopy.getRandomArray();
 		//set the d's to zero
-		for(int i = sumLen - 1; i < randomArray.length; i++){
+		for(int i = sumLen; i < randomArray.length; i++){
 			randomArray[i] = 0.0f;
 		}
 		inputCopy.setRandomArray(randomArray);
